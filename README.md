@@ -124,7 +124,7 @@ Common checks:
 - If vMix fails to start FFmpeg, open ffmpeg_proxy.log to see the rewritten command line.
 
 FDK-AAC dependency:
-- Version 46.2 adds explicit include/lib paths to the FFmpeg configure, resolving “libfdk_aac not found” on clean systems.
+- Version 0.2b adds explicit include/lib paths to the FFmpeg configure, resolving “libfdk_aac not found” on clean systems.
 
 Quality tuning:
 - If the result is too soft at your CRF, increase -b:v or switch to a higher-quality preset mapping (e.g., medium → transcoding+balanced, slow → transcoding+quality).
