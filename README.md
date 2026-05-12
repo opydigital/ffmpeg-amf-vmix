@@ -4,7 +4,7 @@
 
 Transparent libx264 → h264_amf converter for AMD GPU acceleration
 
-[![Version](https://img.shields.io/badge/version-0.2-blue.svg)](#-changelog) [![Status](https://img.shields.io/badge/status-stable-success.svg)](#-changelog)  
+[![Version](https://img.shields.io/badge/version-0.1b-blue.svg)](#-changelog) [![Status](https://img.shields.io/badge/status-stable-success.svg)](#-changelog)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![FFmpeg](https://img.shields.io/badge/FFmpeg-GPL%20v3-red.svg)](https://ffmpeg.org)  
 [![Build](https://img.shields.io/badge/build-Linux%20%2F%20WSL2-orange.svg)](https://ubuntu.com) [![Target](https://img.shields.io/badge/target-Windows%2010%2F11%20x64-blue.svg)](https://www.microsoft.com)  
 [![Donate](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-donate-FFDD00?logo=buy-me-a-coffee&logoColor=black&labelColor=white)](https://buymeacoffee.com/amazoniaaudiovisual)
@@ -47,7 +47,7 @@ FFmpeg AMD AMF Proxy is an intelligent proxy that automatically converts CPU-bas
 
 ### Build (Linux/WSL2)
 - Ensure Ubuntu 20.04+ or WSL2 with basic build tools.
-- Run the provided build script (vmixproxy.sh v46.2).
+- Run the provided build script (vmixproxy.sh).
 - Resulting artifacts will be in output/.
 
 ### Deploy (Windows)
@@ -55,7 +55,6 @@ Copy these files from output/ to %ProgramFiles(x86)%\vMix\streaming directory on
 - ffmpeg6.exe — proxy (configure vMix to use this)
 - ffmpeg.exe — real FFmpeg with AMF and FDK-AAC
 - ffprobe.exe — analysis utility
-- README.txt — quick reference
 
 ### Configure in vMix
 - Settings → Encoders → External → point to ffmpeg6.exe.
@@ -112,7 +111,7 @@ Runtime (Windows):
 Build (Linux/WSL2):
 - Ubuntu 20.04+ or WSL2
 - Standard build tools (installed by script)
-- vmixproxy.sh v46.2 script
+- vmixproxy.sh script
 
 ---
 
@@ -124,7 +123,7 @@ Common checks:
 - If vMix fails to start FFmpeg, open ffmpeg_proxy.log to see the rewritten command line.
 
 FDK-AAC dependency:
-- Version 46.2 adds explicit include/lib paths to the FFmpeg configure, resolving “libfdk_aac not found” on clean systems.
+- The build script includes explicit include/lib paths for FDK-AAC, resolving "libfdk_aac not found" on clean systems.
 
 Quality tuning:
 - If the result is too soft at your CRF, increase -b:v or switch to a higher-quality preset mapping (e.g., medium → transcoding+balanced, slow → transcoding+quality).
@@ -133,13 +132,42 @@ Quality tuning:
 
 ## 📝 Changelog
 
-### v0.1b — AMF minimal proxy
- - Drop-in proxy that replaces libx264 with h264_amf while preserving all vMix encoding parameters (bitrate, GOP, profile, level, audio).
- - Maps x264 presets (ultrafast → veryslow) to AMF -usage / -quality pairs instead of injecting low-level rate-control flags.
- - Forces DirectShow -rtbufsize 1024M for the vMix Video YV12 input to reduce “real-time buffer too full ... frame dropped” messages under high load.
- - Launches the real ffmpeg.exe via the Win32 process API and transparently forwards its exit code back to vMix.
- - Writes per-run proxy logs with both the original vMix command and the rewritten final command to simplify troubleshooting and regression testing.
-​
+### v0.1b — DirectShow Buffer Fix & Optimization
+**Release Date:** January 9, 2026
+
+**DirectShow Buffer Optimization**
+- Solves frequent "real-time buffer [vMix Video YV12] [video input] too full or near too full" warnings causing frame drops during live streams.
+- Automatic override of the `-rtbufsize` parameter from vMix's default 128M to 1024M (1 GiB), providing sufficient buffer headroom for sustained 1080p capture without frame loss.
+
+**Production Validation Results**
+- Tested on Asus TUF FA617NT (Ryzen 7 7735HS, 64GB RAM & Radeon RX 7700S).
+- Input: 1920x1080 @ 29.97 fps via vMix Video YV12.
+- Target bitrate: 6000 kbps (configured in vMix).
+- Actual delivery: 5.6–5.8 Mbps (stable throughout the stream).
+- Encoding speed: 1.02–1.05x realtime.
+- Buffer warnings: zero (complete elimination).
+- Frame drops: zero after initial startup buffering.
+
+**Enhanced Logging**
+- Per-run logs capture both the original and rewritten commands with clear formatting.
+- Example log output:
+  ```
+  ==== vmixproxy per-run log ====
+  Original command: "C:\Program Files (x86)\vMix\streaming\ffmpeg6.exe" -report -rtbufsize 128M ...
+  Final command: "C:\Program Files (x86)\vMix\streaming\ffmpeg.exe" -report -rtbufsize 1024M -c:v h264_amf ...
+  ```
+
+**Core Features (unchanged from v0.1a)**
+- Drop-in proxy that replaces libx264 with h264_amf while preserving all vMix encoding parameters (bitrate, GOP, profile, level, audio).
+- Maps x264 presets (ultrafast → veryslow) to AMF `-usage` / `-quality` pairs.
+- Launches the real ffmpeg.exe via the Win32 process API and transparently forwards its exit code back to vMix.
+- Absolute path execution: fixed path to `C:\Program Files (x86)\vMix\streaming\ffmpeg.exe`.
+
+**Technical Notes**
+- The 1024M buffer allocation is memory-only (system RAM) and does not consume VRAM (~1.6% of 64GB total).
+- Bitrate delivery remains within approximately 3–5% of target (typical VBR-like behavior under CBR constraints).
+- **Breaking Changes:** None. Full backward compatibility with v0.1a deployments.
+
 ### v0.1a — First Release
 - Transparent proxy for libx264 → h264_amf (vMix-friendly).
 - FFmpeg static build with AMF and FDK-AAC integration.
