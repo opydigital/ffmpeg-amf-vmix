@@ -112,7 +112,7 @@ Runtime (Windows):
 Build (Linux/WSL2):
 - Ubuntu 20.04+ or WSL2
 - Standard build tools (installed by script)
-- vmixproxy.sh v46.2 script
+- vmixproxy.sh v0.2 script
 
 ---
 
