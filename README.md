@@ -163,7 +163,7 @@ If this project helped you and you want to support future development, consider 
 
 👉 https://buymeacoffee.com/amazoniaaudiovisual
 
-Official Website: https://www.amazoniaaudiovisual.com.br
+Official Website: https://www.amazoniaaudiovisual.org.br
 
 YouTube Channel: https://www.youtube.com/@amazoniaaudiovisual9838
 
